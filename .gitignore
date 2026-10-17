@@ -1,9 +1,9 @@
-*.iml
 .dart_tool/
-.idea/
 .packages
+.pub-cache/
 .pub/
 build/
-*.swp
 .flutter-plugins
 .flutter-plugins-dependencies
+android/.gradle/
+android/local.properties
