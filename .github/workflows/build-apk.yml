@@ -1,0 +1,60 @@
+name: Build Fakhri Quran APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      # Regenerate Android scaffolding with the Flutter SDK on the runner so
+      # Gradle wrapper files and plugin versions match the installed stable SDK.
+      - name: Generate Android project files
+        run: |
+          rm -rf android
+          flutter create --platforms=android --org com.fakhri --project-name fakhri_quran .
+      - name: Configure Android permissions and minimum SDK
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          manifest = Path('android/app/src/main/AndroidManifest.xml')
+          text = manifest.read_text()
+          permissions = [
+              '<uses-permission android:name="android.permission.INTERNET"/>',
+              '<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>',
+              '<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>',
+          ]
+          start = text.find('<manifest')
+          pos = text.find('>', start) + 1
+          for permission in permissions:
+              if permission not in text:
+                  text = text[:pos] + '\n    ' + permission + text[pos:]
+                  pos += len(permission) + 5
+          text = text.replace('android:label="fakhri_quran"', 'android:label="Fakhri Quran"')
+          manifest.write_text(text)
+          for name in ('android/app/build.gradle', 'android/app/build.gradle.kts'):
+              p = Path(name)
+              if p.exists():
+                  text = p.read_text().replace('minSdk = flutter.minSdkVersion', 'minSdk = 24').replace('minSdk flutter.minSdkVersion', 'minSdk 24')
+                  p.write_text(text)
+          PY
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - run: flutter test
+      - run: flutter build apk --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fakhri-quran-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
