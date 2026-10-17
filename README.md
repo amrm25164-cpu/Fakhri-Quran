@@ -40,3 +40,7 @@
 4. بعد نجاح العملية، افتح نتيجة التشغيل ونزّل artifact باسم `fakhri-quran-release-apk`.
 
 الـ workflow ينشئ ملفات Android المناسبة لإصدار Flutter المستقر الموجود على runner، ثم ينفّذ `flutter pub get` والتحليل والاختبارات وبناء APK. لم أتمكن من تنفيذ Flutter محليًا في بيئة التأليف الحالية، لذلك يجب اعتبار نجاح الـ workflow واختبار التطبيق على جهاز Android شرطًا قبل النشر.
+
+
+## إصلاح خطأ Gradle في Klencod IDE
+إذا ظهر أن Gradle 8.7 أقدم من الحد المطلوب 8.14.0، تم تحديث `android/gradle/wrapper/gradle-wrapper.properties` إلى Gradle 8.14.3. ارفع هذه النسخة إلى GitHub وشغّل workflow مرة أخرى. تحذيرات Node.js أو setup-java ليست سبب الخطأ المذكور.
